@@ -3,14 +3,19 @@
   "owner": { "name": "PIAS" },
   "plugins": [
     {
-      "name": "bim-dev",
-      "source": "./plugins/bim-dev",
-      "description": "BIM / Revit development skills"
+      "name": "pias-workflow",
+      "source": "./plugins/pias-workflow",
+      "description": "General engineering workflow skills: planning, grilling, specs, TDD, code review, debugging"
     },
     {
-      "name": "gis-dev",
-      "source": "./plugins/gis-dev",
-      "description": "GIS development skills"
+      "name": "bim-dev",
+      "source": "./plugins/bim-dev",
+      "description": "ThatOpen / BIM web component skills"
+    },
+    {
+      "name": "app-dev",
+      "source": "./plugins/app-dev",
+      "description": "Firebase, Genkit, React Router and Xcode app development skills"
     }
   ]
 }
