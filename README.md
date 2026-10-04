@@ -14,7 +14,7 @@ Add to each project's `.claude/settings.json` and commit:
 ```json
 {
   "extraKnownMarketplaces": {
-    "pias-skills": { "source": { "source": "github", "repo": "Pias-Phacharakorn/Central-Skill-PIAS" } }
+    "pias-skills": { "source": { "source": "git", "url": "https://github.com/Pias-Phacharakorn/Central-Skill-PIAS.git" } }
   },
   "enabledPlugins": {
     "pias-workflow@pias-skills": true,
@@ -24,7 +24,7 @@ Add to each project's `.claude/settings.json` and commit:
 ```
 Local manual install:
 ```
-/plugin marketplace add Pias-Phacharakorn/Central-Skill-PIAS
+/plugin marketplace add https://github.com/Pias-Phacharakorn/Central-Skill-PIAS.git
 /plugin install pias-workflow@pias-skills
 ```
 Cloud session: if skills don't appear in the first session, run `/reload-skills`.
