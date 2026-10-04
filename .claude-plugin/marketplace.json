@@ -1,0 +1,16 @@
+{
+  "name": "pias-skills",
+  "owner": { "name": "PIAS" },
+  "plugins": [
+    {
+      "name": "bim-dev",
+      "source": "./plugins/bim-dev",
+      "description": "BIM / Revit development skills"
+    },
+    {
+      "name": "gis-dev",
+      "source": "./plugins/gis-dev",
+      "description": "GIS development skills"
+    }
+  ]
+}
