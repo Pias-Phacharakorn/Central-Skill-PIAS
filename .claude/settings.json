@@ -1,0 +1,11 @@
+{
+  "extraKnownMarketplaces": {
+    "pias-skills": {
+      "source": { "source": "git", "url": "https://github.com/Pias-Phacharakorn/Central-Skill-PIAS.git" }
+    }
+  },
+  "enabledPlugins": {
+    "pias-workflow@pias-skills": true,
+    "bim-dev@pias-skills": true
+  }
+}
