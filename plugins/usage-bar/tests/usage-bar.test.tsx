@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { countdown, levelColor } from '../hooks/register'
+import { countdown, levelColor, statusText } from '../hooks/register'
 
 const BAND = {
   plugin: 'usage-bar',
@@ -49,4 +49,13 @@ test('band shows 5h, 7d and context after a measurement', async ($, on) => {
     expect(await ui.find({ type: 'Text', text: /↻/ })).toBeDefined()
     await ui.unmount()
   }
+})
+
+test('status text carries all three meters', async () => {
+  const now = Date.parse('2026-10-07T00:00:00Z')
+  const text = statusText(
+    { fiveHour: { percent: 50, resetsAt: '2026-10-07T01:00:00Z' }, sevenDay: null, context: 8 },
+    now,
+  )
+  expect(text).toBe('5h ███░░░ 50% ↻1h 0m  │  7d ░░░░░░ --  │  ctx ░░░░░░ 8%')
 })
