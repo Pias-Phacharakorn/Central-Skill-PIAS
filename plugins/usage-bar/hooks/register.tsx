@@ -36,11 +36,29 @@ export const countdown = (resetsAt: string | undefined, nowMs: number) => {
   return `${m}m`
 }
 
+const textBar = (percent: number | null) => {
+  if (percent === null) return '░░░░░░ --'
+  const pct = Math.min(100, Math.max(0, Math.round(percent)))
+  const filled = Math.round((pct * 6) / 100)
+  return `${'█'.repeat(filled)}${'░'.repeat(6 - filled)} ${pct}%`
+}
+
+// Plain-text copy for surfaces that draw the status line but not the band.
+export const statusText = (u: Usage, nowMs: number) => {
+  const part = (label: string, m: Meter | null) => {
+    const reset = countdown(m?.resetsAt, nowMs)
+    return `${label} ${textBar(m?.percent ?? null)}${reset ? ` ↻${reset}` : ''}`
+  }
+  return [part('5h', u.fiveHour), part('7d', u.sevenDay), `ctx ${textBar(u.context)}`].join('  │  ')
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const result = await next(e)
     const { rateLimits, context } = await $.session.usage()
-    await update($, usage, () => toUsage(rateLimits, context))
+    const first = toUsage(rateLimits, context)
+    await update($, usage, () => first)
+    $.ui.status(statusText(first, await $.clock.now()))
     const tick = async () => {
       const t = await $.clock.now()
       await update($, now, () => t)
@@ -51,7 +69,9 @@ export const register: Register = on => {
   })
 
   on('session.measure', async ($, e, next) => {
-    await update($, usage, () => toUsage(e.rateLimits, e.context))
+    const latest = toUsage(e.rateLimits, e.context)
+    await update($, usage, () => latest)
+    $.ui.status(statusText(latest, await $.clock.now()))
     return next(e)
   })
 
