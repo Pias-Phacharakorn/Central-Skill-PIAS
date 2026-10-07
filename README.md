@@ -18,7 +18,8 @@ Add to each project's `.claude/settings.json` and commit:
   },
   "enabledPlugins": {
     "pias-workflow@pias-skills": true,
-    "bim-dev@pias-skills": true
+    "bim-dev@pias-skills": true,
+    "usage-bar@pias-skills": true
   }
 }
 ```
@@ -42,6 +43,7 @@ Pick the target agent(s) when prompted. For cloud agents, put this command in th
 | `pias-workflow` | ask-matt, caveman, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-me, grill-with-docs, grilling, handoff, implement, improve-codebase-architecture, plan-visualizer, prototype, research, resolving-merge-conflicts, sentry-sdk-skill-creator, setup-matt-pocock-skills, tdd, teach, to-questionnaire, to-spec, to-tickets, triage, wait-what, wayfinder, wizard, writing-for-agents |
 | `bim-dev` | thatopen-bim-component, thatopen-items-finder, thatopen-ui-section-grids |
 | `app-dev` | developing-genkit-*, firebase-*, react-router-framework-mode, xcode-project-setup |
+| `usage-bar` | Mod (function hooks): band above the prompt showing 5h / 7d plan-limit bars, context fill and reset countdowns |
 
 Project-specific skills (e.g. `build-addin`, `learnopen-*`) stay in their own project.
 
@@ -54,3 +56,21 @@ Project-specific skills (e.g. `build-addin`, `learnopen-*`) stay in their own pr
 ## Adding a plugin (new domain)
 1. Create `plugins/<name>/.claude-plugin/plugin.json` and `plugins/<name>/skills/`.
 2. Register it in `.claude-plugin/marketplace.json`.
+
+## Mods (function hooks)
+A mod is a plugin whose `hooks/hooks.json` lists a TypeScript hooks module instead of skills.
+```
+plugins/<mod>/.claude-plugin/plugin.json
+plugins/<mod>/hooks/hooks.json          { "modules": ["./register.tsx"] }
+plugins/<mod>/hooks/register.tsx
+plugins/<mod>/types/index.d.ts           only if it keeps $.state
+plugins/<mod>/tests/*.test.tsx
+```
+Check before pushing: `claude plugin validate plugins/<mod>` and `claude plugin test plugins/<mod>`.
+
+Enable everywhere on one machine: put the `extraKnownMarketplaces` + `enabledPlugins` block above in `~/.claude/settings.json` instead of a project's. Cloud sessions only read the project's `.claude/settings.json`.
+
+One-off install from a terminal:
+```
+/plugin install usage-bar --marketplace Pias-Phacharakorn/Central-Skill-PIAS
+```
