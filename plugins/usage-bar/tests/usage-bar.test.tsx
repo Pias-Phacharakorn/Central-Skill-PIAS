@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { countdown, levelColor, statusText } from '../hooks/register'
+import { barCells, countdown, levelColor, statusText } from '../hooks/register'
 
 const BAND = {
   plugin: 'usage-bar',
@@ -43,12 +43,20 @@ test('band shows 5h, 7d and context after a measurement', async ($, on) => {
   })
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...BAND, surface })
-    expect(await ui.find({ type: 'Text', text: / 42%/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: / 91%/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: / 8%/ })).toBeDefined()
+    const bars = (await ui.findAll({ type: 'Text', text: /%/ })).map(t => t.text)
+    expect(bars.some(t => t.replace(/ /g, '') === '42%')).toBe(true)
+    expect(bars.some(t => t.replace(/ /g, '') === '91%')).toBe(true)
+    expect(bars.some(t => t.replace(/ /g, '') === '8%')).toBe(true)
     expect(await ui.find({ type: 'Text', text: /↻/ })).toBeDefined()
     await ui.unmount()
   }
+})
+
+test('bar cells centre the percentage and split at the fill', async () => {
+  expect(barCells(50, 20)).toEqual({ pct: 50, filled: '        50', empty: '%         ' })
+  expect(barCells(0, 12)).toEqual({ pct: 0, filled: '', empty: '     0%     ' })
+  expect(barCells(100, 12)).toEqual({ pct: 100, filled: '    100%    ', empty: '' })
+  expect(barCells(null, 12)).toEqual({ pct: null, filled: '', empty: '     --     ' })
 })
 
 test('status text carries all three meters', async () => {

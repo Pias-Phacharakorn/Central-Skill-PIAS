@@ -43,6 +43,16 @@ const textBar = (percent: number | null) => {
   return `${'█'.repeat(filled)}${'░'.repeat(6 - filled)} ${pct}%`
 }
 
+// The bar's cells with the percentage centred in them, cut where the fill ends.
+export const barCells = (percent: number | null, width: number) => {
+  const pct = percent === null ? null : Math.min(100, Math.max(0, Math.round(percent)))
+  const label = pct === null ? '--' : `${pct}%`
+  const left = Math.floor((width - label.length) / 2)
+  const cells = ' '.repeat(left) + label + ' '.repeat(width - left - label.length)
+  const filled = pct === null ? 0 : Math.round((pct * width) / 100)
+  return { pct, filled: cells.slice(0, filled), empty: cells.slice(filled) }
+}
+
 // Plain-text copy for surfaces that draw the status line but not the band.
 export const statusText = (u: Usage, nowMs: number) => {
   const part = (label: string, m: Meter | null) => {
@@ -81,18 +91,22 @@ export const register: Register = on => {
 
     const nowMs = (await read($, now)) || (await $.clock.now())
     const { Box, Text } = $.ui.resolve(e)
-    const width = e.props.bodyColumns < 90 ? 6 : 12
+    const width = e.props.bodyColumns < 110 ? 12 : 20
 
     const meter = (label: string, percent: number | null, resetsAt?: string) => {
-      const pct = percent === null ? null : Math.min(100, Math.max(0, Math.round(percent)))
-      const filled = pct === null ? 0 : Math.round((pct * width) / 100)
+      const { pct, filled, empty } = barCells(percent, width)
       const reset = countdown(resetsAt, nowMs)
       return (
         <Box flexDirection="row" key={label}>
           <Text bold>{label} </Text>
-          <Text color={pct === null ? 'subtle' : levelColor(pct)}>{'━'.repeat(filled)}</Text>
-          <Text color="subtle">{'─'.repeat(width - filled)}</Text>
-          <Text color={pct === null ? 'subtle' : levelColor(pct)}> {pct === null ? '--' : `${pct}%`}</Text>
+          <Text>
+            <Text bold color="inverseText" backgroundColor={pct === null ? 'subtle' : levelColor(pct)}>
+              {filled}
+            </Text>
+            <Text bold color="text" backgroundColor="subtle">
+              {empty}
+            </Text>
+          </Text>
           {reset ? <Text dimColor> ↻ {reset}</Text> : null}
         </Box>
       )
