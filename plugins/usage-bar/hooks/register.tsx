@@ -1,6 +1,13 @@
-import type { EngineInterface, Register, SessionContextUsage, SessionRateLimit } from 'claude-code'
+import { atom, read, update } from 'claude-code'
+import type { Register, SessionContextUsage, SessionRateLimit } from 'claude-code'
 
 import type { Meter, Usage } from '../types'
+
+const usage = atom({ plugin: 'usage-bar', key: 'usage' } as const, null)
+// Bumped every minute so the reset countdowns redraw between turns.
+const now = atom({ plugin: 'usage-bar', key: 'now' } as const, 0)
+
+const CELLS = 6
 
 const toMeter = (limits: SessionRateLimit[], kind: string): Meter | null => {
   const limit = limits.find(l => l.kind === kind)
@@ -16,6 +23,9 @@ export const toUsage = (
   context: context.percent ?? null,
 })
 
+export const levelColor = (percent: number) =>
+  percent >= 80 ? 'error' : percent >= 50 ? 'warning' : 'success'
+
 export const countdown = (resetsAt: string | undefined, nowMs: number) => {
   if (!resetsAt) return ''
   const minutes = Math.floor((Date.parse(resetsAt) - nowMs) / 60000)
@@ -28,41 +38,75 @@ export const countdown = (resetsAt: string | undefined, nowMs: number) => {
   return `${m}m`
 }
 
-const textBar = (percent: number | null) => {
-  if (percent === null) return '░░░░░░ --'
+export const barParts = (percent: number | null) => {
+  if (percent === null) return { pct: null, filled: '', empty: '░'.repeat(CELLS) }
   const pct = Math.min(100, Math.max(0, Math.round(percent)))
-  const filled = Math.round((pct * 6) / 100)
-  return `${'█'.repeat(filled)}${'░'.repeat(6 - filled)} ${pct}%`
-}
-
-export const statusText = (u: Usage, nowMs: number) => {
-  const part = (label: string, m: Meter | null) => {
-    const reset = countdown(m?.resetsAt, nowMs)
-    return `${label} ${textBar(m?.percent ?? null)}${reset ? ` ↻${reset}` : ''}`
-  }
-  return [part('5h', u.fiveHour), part('7d', u.sevenDay), `ctx ${textBar(u.context)}`].join('  │  ')
-}
-
-let latest: Usage | null = null
-
-async function show($: EngineInterface) {
-  if (latest) $.ui.status(statusText(latest, await $.clock.now()))
+  const n = Math.round((pct * CELLS) / 100)
+  return { pct, filled: '█'.repeat(n), empty: '░'.repeat(CELLS - n) }
 }
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const result = await next(e)
     const { rateLimits, context } = await $.session.usage()
-    latest = toUsage(rateLimits, context)
-    await show($)
-    // Redraw every minute so the reset countdowns stay current between turns.
-    $.clock.every(60_000, () => show($))
+    const first = toUsage(rateLimits, context)
+    await update($, usage, () => first)
+    const tick = async () => {
+      const t = await $.clock.now()
+      await update($, now, () => t)
+    }
+    await tick()
+    $.clock.every(60_000, tick)
     return result
   })
 
   on('session.measure', async ($, e, next) => {
-    latest = toUsage(e.rateLimits, e.context)
-    await show($)
+    const latest = toUsage(e.rateLimits, e.context)
+    await update($, usage, () => latest)
     return next(e)
+  })
+
+  // Drawn on the hint line under the prompt rather than through $.ui.status:
+  // the status line is plain text and carries the plugin's name in front.
+  on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
+    const current = await read($, usage)
+    if (current === null) return next(e)
+
+    const nowMs = (await read($, now)) || (await $.clock.now())
+    const { Box, Text } = $.ui.resolve(e)
+
+    const meter = (label: string, percent: number | null, resetsAt?: string) => {
+      const { pct, filled, empty } = barParts(percent)
+      const reset = countdown(resetsAt, nowMs)
+      return (
+        <Box flexDirection="row" key={label}>
+          <Text dimColor>{label} </Text>
+          {pct === null ? null : <Text color={levelColor(pct)}>{filled}</Text>}
+          <Text dimColor>{empty}</Text>
+          <Text color={pct === null ? undefined : levelColor(pct)} dimColor={pct === null}>
+            {' '}
+            {pct === null ? '--' : `${pct}%`}
+          </Text>
+          {reset ? <Text dimColor> ↻{reset}</Text> : null}
+        </Box>
+      )
+    }
+
+    const sep = (key: string) => (
+      <Text dimColor key={key}>
+        {'  │  '}
+      </Text>
+    )
+
+    return (
+      <Box flexDirection="row">
+        {e.props.hint ? <Text dimColor>{e.props.hint}{'  │  '}</Text> : null}
+        {meter('5h', current.fiveHour?.percent ?? null, current.fiveHour?.resetsAt)}
+        {sep('s1')}
+        {meter('7d', current.sevenDay?.percent ?? null, current.sevenDay?.resetsAt)}
+        {sep('s2')}
+        {meter('ctx', current.context)}
+      </Box>
+    )
   })
 }

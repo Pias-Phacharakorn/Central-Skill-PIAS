@@ -40,7 +40,7 @@ Pick the target agent(s) when prompted. For cloud agents, put this command in th
 | Plugin | Contents |
 |---|---|
 | `pias-workflow` | ask-matt, caveman, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-me, grill-with-docs, grilling, handoff, implement, improve-codebase-architecture, plan-visualizer, prototype, research, resolving-merge-conflicts, sentry-sdk-skill-creator, setup-matt-pocock-skills, tdd, teach, to-questionnaire, to-spec, to-tickets, triage, wait-what, wayfinder, wizard, writing-for-agents |
-| `usage-bar` | Mod (function hooks): status line under the prompt with 5h / 7d plan-limit bars, context fill and reset countdowns |
+| `usage-bar` | Mod (function hooks): hint line under the prompt with coloured (green / yellow / red) 5h / 7d plan-limit bars, context fill and reset countdowns |
 
 Project-specific skills (e.g. `build-addin`, `learnopen-*`) stay in their own project.
 
