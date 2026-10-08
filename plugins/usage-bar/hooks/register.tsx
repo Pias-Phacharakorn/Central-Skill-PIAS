@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { Register, SessionContextUsage, SessionRateLimit } from 'claude-code'
+import type { EngineInterface, Register, SessionContextUsage, SessionRateLimit } from 'claude-code'
 
 import type { Meter, Usage } from '../types'
 
@@ -45,6 +45,54 @@ export const barParts = (percent: number | null) => {
   return { pct, filled: '█'.repeat(n), empty: '░'.repeat(CELLS - n) }
 }
 
+// The meters as a tree, after whatever the engine drew at that site; null
+// until the first measurement.
+async function meters(
+  $: EngineInterface,
+  e: Parameters<EngineInterface['ui']['resolve']>[0],
+  before: string,
+) {
+  const current = await read($, usage)
+  if (current === null) return null
+
+  const nowMs = (await read($, now)) || (await $.clock.now())
+  const { Box, Text } = $.ui.resolve(e)
+
+  const meter = (label: string, percent: number | null, resetsAt?: string) => {
+    const { pct, filled, empty } = barParts(percent)
+    const reset = countdown(resetsAt, nowMs)
+    return (
+      <Box flexDirection="row" key={label}>
+        <Text dimColor>{label} </Text>
+        {pct === null ? null : <Text color={levelColor(pct)}>{filled}</Text>}
+        <Text dimColor>{empty}</Text>
+        <Text color={pct === null ? undefined : levelColor(pct)} dimColor={pct === null}>
+          {' '}
+          {pct === null ? '--' : `${pct}%`}
+        </Text>
+        {reset ? <Text dimColor> ↻{reset}</Text> : null}
+      </Box>
+    )
+  }
+
+  const sep = (key: string) => (
+    <Text dimColor key={key}>
+      {'  │  '}
+    </Text>
+  )
+
+  return (
+    <Box flexDirection="row">
+      {before ? <Text dimColor>{before}{'  │  '}</Text> : null}
+      {meter('5h', current.fiveHour?.percent ?? null, current.fiveHour?.resetsAt)}
+      {sep('s1')}
+      {meter('7d', current.sevenDay?.percent ?? null, current.sevenDay?.resetsAt)}
+      {sep('s2')}
+      {meter('ctx', current.context)}
+    </Box>
+  )
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const result = await next(e)
@@ -66,47 +114,17 @@ export const register: Register = on => {
     return next(e)
   })
 
-  // Drawn on the hint line under the prompt rather than through $.ui.status:
-  // the status line is plain text and carries the plugin's name in front.
+  // The status line is plain text with the plugin's name in front, so the
+  // meters draw a tree of their own: on the terminal in the hint line under
+  // the prompt, on the desktop (which has no hint line) in the footer's mode
+  // labels.
   on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
-    const current = await read($, usage)
-    if (current === null) return next(e)
+    if (e.surface !== 'terminal') return next(e)
+    return (await meters($, e, e.props.hint)) ?? next(e)
+  })
 
-    const nowMs = (await read($, now)) || (await $.clock.now())
-    const { Box, Text } = $.ui.resolve(e)
-
-    const meter = (label: string, percent: number | null, resetsAt?: string) => {
-      const { pct, filled, empty } = barParts(percent)
-      const reset = countdown(resetsAt, nowMs)
-      return (
-        <Box flexDirection="row" key={label}>
-          <Text dimColor>{label} </Text>
-          {pct === null ? null : <Text color={levelColor(pct)}>{filled}</Text>}
-          <Text dimColor>{empty}</Text>
-          <Text color={pct === null ? undefined : levelColor(pct)} dimColor={pct === null}>
-            {' '}
-            {pct === null ? '--' : `${pct}%`}
-          </Text>
-          {reset ? <Text dimColor> ↻{reset}</Text> : null}
-        </Box>
-      )
-    }
-
-    const sep = (key: string) => (
-      <Text dimColor key={key}>
-        {'  │  '}
-      </Text>
-    )
-
-    return (
-      <Box flexDirection="row">
-        {e.props.hint ? <Text dimColor>{e.props.hint}{'  │  '}</Text> : null}
-        {meter('5h', current.fiveHour?.percent ?? null, current.fiveHour?.resetsAt)}
-        {sep('s1')}
-        {meter('7d', current.sevenDay?.percent ?? null, current.sevenDay?.resetsAt)}
-        {sep('s2')}
-        {meter('ctx', current.context)}
-      </Box>
-    )
+  on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {
+    if (e.surface !== 'desktop') return next(e)
+    return (await meters($, e, e.props.modes.join(' & '))) ?? next(e)
   })
 }

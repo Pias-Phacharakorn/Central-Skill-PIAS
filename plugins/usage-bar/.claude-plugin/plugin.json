@@ -1,7 +1,7 @@
 {
   "name": "usage-bar",
-  "version": "0.6.0",
-  "description": "Coloured 5h / 7d plan-limit bars, context fill and reset countdowns on the hint line under the prompt",
+  "version": "0.7.0",
+  "description": "Coloured 5h / 7d plan-limit bars, context fill and reset countdowns in the prompt footer",
   "author": { "name": "PIAS" },
   "types": "./types/index.d.ts"
 }
