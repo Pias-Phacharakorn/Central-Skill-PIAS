@@ -11,18 +11,18 @@ test('countdown formats days, hours and minutes', async () => {
   expect(countdown(undefined, now)).toBe('')
 })
 
-test('colour follows the 70 / 90 thresholds', async () => {
-  expect(levelCell(10)).toBe('🟩')
-  expect(levelCell(70)).toBe('🟨')
-  expect(levelCell(95)).toBe('🟥')
+test('colour follows the 50 / 80 thresholds', async () => {
+  expect(levelCell(49)).toBe('🟩')
+  expect(levelCell(50)).toBe('🟨')
+  expect(levelCell(80)).toBe('🟥')
 })
 
 test('bar lights a cell for any usage and colours by level', async () => {
-  expect(textBar(0)).toBe('⬛⬛⬛⬛⬛ 0%')
-  expect(textBar(7)).toBe('🟩⬛⬛⬛⬛ 7%')
-  expect(textBar(75)).toBe('🟨🟨🟨🟨⬛ 75%')
-  expect(textBar(100)).toBe('🟥🟥🟥🟥🟥 100%')
-  expect(textBar(null)).toBe('⬛⬛⬛⬛⬛ --')
+  expect(textBar(0)).toBe('⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛ 0%')
+  expect(textBar(7)).toBe('🟩⬛⬛⬛⬛⬛⬛⬛⬛⬛ 7%')
+  expect(textBar(75)).toBe('🟨🟨🟨🟨🟨🟨🟨🟨⬛⬛ 75%')
+  expect(textBar(100)).toBe('🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥 100%')
+  expect(textBar(null)).toBe('⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛ --')
 })
 
 test('status text carries all three meters', async () => {
@@ -31,7 +31,7 @@ test('status text carries all three meters', async () => {
     { fiveHour: { percent: 50, resetsAt: '2026-10-07T01:00:00Z' }, sevenDay: null, context: 8 },
     now,
   )
-  expect(text).toBe('5h 🟩🟩🟩⬛⬛ 50% ↻1h 0m  │  7d ⬛⬛⬛⬛⬛ --  │  ctx 🟩⬛⬛⬛⬛ 8%')
+  expect(text).toBe('5h 🟨🟨🟨🟨🟨⬛⬛⬛⬛⬛ 50% ↻1h 0m  │  7d ⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛ --  │  ctx 🟩⬛⬛⬛⬛⬛⬛⬛⬛⬛ 8%')
 })
 
 test('a measurement pins the coloured status line', async ($, on) => {
@@ -51,7 +51,7 @@ test('a measurement pins the coloured status line', async ($, on) => {
     changed: ['context', 'rateLimits'],
   })
   const last = seen.at(-1) ?? ''
-  expect(last).toContain('5h 🟩🟩🟩⬛⬛ 42%')
-  expect(last).toContain('7d 🟥🟥🟥🟥🟥 91%')
-  expect(last).toContain('ctx 🟩⬛⬛⬛⬛ 8%')
+  expect(last).toContain('5h 🟩🟩🟩🟩🟩⬛⬛⬛⬛⬛ 42%')
+  expect(last).toContain('7d 🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥 91%')
+  expect(last).toContain('ctx 🟩⬛⬛⬛⬛⬛⬛⬛⬛⬛ 8%')
 })

@@ -2,7 +2,7 @@ import type { EngineInterface, Register, SessionContextUsage, SessionRateLimit }
 
 import type { Meter, Usage } from '../types'
 
-const CELLS = 5
+const CELLS = 10
 
 const toMeter = (limits: SessionRateLimit[], kind: string): Meter | null => {
   const limit = limits.find(l => l.kind === kind)
@@ -20,7 +20,7 @@ export const toUsage = (
 
 // The status line is plain text, so the bar's colour comes from coloured squares.
 export const levelCell = (percent: number) =>
-  percent >= 90 ? '🟥' : percent >= 70 ? '🟨' : '🟩'
+  percent >= 80 ? '🟥' : percent >= 50 ? '🟨' : '🟩'
 
 export const countdown = (resetsAt: string | undefined, nowMs: number) => {
   if (!resetsAt) return ''
