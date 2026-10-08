@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { cellsFor, countdown, levelCell, statusText, textBar } from '../hooks/register'
+import { countdown, statusText } from '../hooks/register'
 
 test('countdown formats days, hours and minutes', async () => {
   const now = Date.parse('2026-10-07T00:00:00Z')
@@ -11,30 +11,16 @@ test('countdown formats days, hours and minutes', async () => {
   expect(countdown(undefined, now)).toBe('')
 })
 
-test('colour follows the 50 / 80 thresholds', async () => {
-  expect(levelCell(49)).toBe('🟩')
-  expect(levelCell(50)).toBe('🟨')
-  expect(levelCell(80)).toBe('🟥')
-})
-
-test('bar lights a cell for any usage and colours by level', async () => {
-  expect(textBar(0)).toBe('⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛ 0%')
-  expect(textBar(7)).toBe('🟩⬛⬛⬛⬛⬛⬛⬛⬛⬛ 7%')
-  expect(textBar(75)).toBe('🟨🟨🟨🟨🟨🟨🟨🟨⬛⬛ 75%')
-  expect(textBar(100)).toBe('🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥 100%')
-  expect(textBar(null)).toBe('⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛ --')
-})
-
 test('status text carries all three meters', async () => {
   const now = Date.parse('2026-10-07T00:00:00Z')
   const text = statusText(
     { fiveHour: { percent: 50, resetsAt: '2026-10-07T01:00:00Z' }, sevenDay: null, context: 8 },
     now,
   )
-  expect(text).toBe('5h 🟨🟨🟨🟨🟨⬛⬛⬛⬛⬛ 50% ↻1h 0m  │  7d ⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛ --  │  ctx 🟩⬛⬛⬛⬛⬛⬛⬛⬛⬛ 8%')
+  expect(text).toBe('5h ███░░░ 50% ↻1h 0m  │  7d ░░░░░░ --  │  ctx ░░░░░░ 8%')
 })
 
-test('a measurement pins the coloured status line', async ($, on) => {
+test('a measurement pins the status line', async ($, on) => {
   mock.clock(on)
   const seen: (string | undefined)[] = []
   on('ui.status', (_$, e) => {
@@ -50,47 +36,5 @@ test('a measurement pins the coloured status line', async ($, on) => {
     ],
     changed: ['context', 'rateLimits'],
   })
-  const last = seen.at(-1) ?? ''
-  expect(last).toContain('5h 🟩🟩🟩🟩🟩⬛⬛⬛⬛⬛ 42%')
-  expect(last).toContain('7d 🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥 91%')
-  expect(last).toContain('ctx 🟩⬛⬛⬛⬛⬛⬛⬛⬛⬛ 8%')
-})
-
-test('narrow screens get 5 cells, wide ones 10', async () => {
-  expect(cellsFor(100)).toBe(5)
-  expect(cellsFor(129)).toBe(5)
-  expect(cellsFor(130)).toBe(10)
-  expect(cellsFor(undefined)).toBe(10)
-  expect(textBar(42, 5)).toBe('🟩🟩🟩⬛⬛ 42%')
-})
-
-test('a narrow prompt hint shrinks the status line to 5 cells', async ($, on) => {
-  mock.clock(on)
-  on('ui.render', { component: 'PromptHint' }, ($, e) => {
-    const { Text } = $.ui.resolve(e)
-    return <Text dimColor>{e.props.hint}</Text>
-  })
-  const seen: (string | undefined)[] = []
-  on('ui.status', (_$, e) => {
-    seen.push(e.text)
-    return { value: undefined }
-  })
-  on('session.measure', (_$, e) => ({ changed: e.changed }))
-  await $.session.measure({
-    context: { window: 1_000_000, tokens: 80_000, percent: 8 },
-    rateLimits: [{ kind: 'five_hour', percentUsed: 42.4 }],
-    changed: ['context', 'rateLimits'],
-  })
-  const hint = {
-    plugin: 'usage-bar',
-    component: 'PromptHint',
-    surface: 'terminal',
-    props: { isDraft: false, isWorking: false, hint: '? for shortcuts' },
-  } as const
-  const narrow = await $.ui.mount({ ...hint, viewport: { columns: 100, rows: 40 } })
-  expect(seen.at(-1) ?? '').toContain('5h 🟩🟩🟩⬛⬛ 42%')
-  await narrow.unmount()
-  const wide = await $.ui.mount({ ...hint, viewport: { columns: 160, rows: 40 } })
-  expect(seen.at(-1) ?? '').toContain('5h 🟩🟩🟩🟩🟩⬛⬛⬛⬛⬛ 42%')
-  await wide.unmount()
+  expect(seen.at(-1)).toBe('5h ███░░░ 42%  │  7d █████░ 91%  │  ctx ░░░░░░ 8%')
 })
