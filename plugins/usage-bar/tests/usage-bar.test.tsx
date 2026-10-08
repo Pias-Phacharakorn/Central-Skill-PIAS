@@ -1,6 +1,12 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { countdown, statusText } from '../hooks/register'
+import { barParts, countdown, levelColor } from '../hooks/register'
+
+const HINT = {
+  plugin: 'usage-bar',
+  component: 'PromptHint',
+  props: { isDraft: false, isWorking: false, hint: '? for shortcuts' },
+} as const
 
 test('countdown formats days, hours and minutes', async () => {
   const now = Date.parse('2026-10-07T00:00:00Z')
@@ -11,30 +17,42 @@ test('countdown formats days, hours and minutes', async () => {
   expect(countdown(undefined, now)).toBe('')
 })
 
-test('status text carries all three meters', async () => {
-  const now = Date.parse('2026-10-07T00:00:00Z')
-  const text = statusText(
-    { fiveHour: { percent: 50, resetsAt: '2026-10-07T01:00:00Z' }, sevenDay: null, context: 8 },
-    now,
-  )
-  expect(text).toBe('5h ███░░░ 50% ↻1h 0m  │  7d ░░░░░░ --  │  ctx ░░░░░░ 8%')
+test('colour follows the 50 / 80 thresholds', async () => {
+  expect(levelColor(49)).toBe('success')
+  expect(levelColor(50)).toBe('warning')
+  expect(levelColor(80)).toBe('error')
 })
 
-test('a measurement pins the status line', async ($, on) => {
+test('bar splits into filled and empty cells', async () => {
+  expect(barParts(50)).toEqual({ pct: 50, filled: '███', empty: '░░░' })
+  expect(barParts(0)).toEqual({ pct: 0, filled: '', empty: '░░░░░░' })
+  expect(barParts(null)).toEqual({ pct: null, filled: '', empty: '░░░░░░' })
+})
+
+test('the hint line shows coloured meters and no status line', async ($, on) => {
   mock.clock(on)
-  const seen: (string | undefined)[] = []
+  const statuses: (string | undefined)[] = []
   on('ui.status', (_$, e) => {
-    seen.push(e.text)
+    statuses.push(e.text)
     return { value: undefined }
   })
   on('session.measure', (_$, e) => ({ changed: e.changed }))
   await $.session.measure({
     context: { window: 1_000_000, tokens: 80_000, percent: 8 },
     rateLimits: [
-      { kind: 'five_hour', percentUsed: 42.4 },
+      { kind: 'five_hour', percentUsed: 42.4, resetsAt: '2099-01-01T00:00:00Z' },
       { kind: 'seven_day', percentUsed: 91 },
     ],
     changed: ['context', 'rateLimits'],
   })
-  expect(seen.at(-1)).toBe('5h ███░░░ 42%  │  7d █████░ 91%  │  ctx ░░░░░░ 8%')
+  expect(statuses).toEqual([])
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...HINT, surface })
+    expect(await ui.find({ type: 'Text', text: /42%/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /91%/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /8%/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /shortcuts/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /↻/ })).toBeDefined()
+    await ui.unmount()
+  }
 })
