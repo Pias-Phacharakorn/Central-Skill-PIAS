@@ -22,7 +22,7 @@
     {
       "name": "usage-bar",
       "source": "./plugins/usage-bar",
-      "description": "Mod: band above the prompt with 5h / 7d plan-limit bars, context fill and reset countdowns"
+      "description": "Mod: status line with green / yellow / red 5h / 7d plan-limit bars, context fill and reset countdowns"
     }
   ]
 }

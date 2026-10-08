@@ -1,7 +1,7 @@
 {
   "name": "usage-bar",
-  "version": "0.1.0",
-  "description": "Band above the prompt with 5h / 7d plan-limit bars, context fill and reset countdowns",
+  "version": "0.2.0",
+  "description": "Status line with green / yellow / red 5h / 7d plan-limit bars, context fill and reset countdowns",
   "author": { "name": "PIAS" },
   "types": "./types/index.d.ts"
 }
