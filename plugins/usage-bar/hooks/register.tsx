@@ -1,11 +1,8 @@
-import { atom, read, update } from 'claude-code'
-import type { Register, SessionContextUsage, SessionRateLimit } from 'claude-code'
+import type { EngineInterface, Register, SessionContextUsage, SessionRateLimit } from 'claude-code'
 
 import type { Meter, Usage } from '../types'
 
-const usage = atom({ plugin: 'usage-bar', key: 'usage' } as const, null)
-// Bumped every minute so the reset countdowns redraw between turns.
-const now = atom({ plugin: 'usage-bar', key: 'now' } as const, 0)
+const CELLS = 10
 
 const toMeter = (limits: SessionRateLimit[], kind: string): Meter | null => {
   const limit = limits.find(l => l.kind === kind)
@@ -21,8 +18,9 @@ export const toUsage = (
   context: context.percent ?? null,
 })
 
-export const levelColor = (percent: number) =>
-  percent >= 90 ? 'error' : percent >= 70 ? 'warning' : 'success'
+// The status line is plain text, so the bar's colour comes from coloured squares.
+export const levelCell = (percent: number) =>
+  percent >= 80 ? '🟥' : percent >= 50 ? '🟨' : '🟩'
 
 export const countdown = (resetsAt: string | undefined, nowMs: number) => {
   if (!resetsAt) return ''
@@ -36,24 +34,14 @@ export const countdown = (resetsAt: string | undefined, nowMs: number) => {
   return `${m}m`
 }
 
-const textBar = (percent: number | null) => {
-  if (percent === null) return '░░░░░░ --'
+// Any usage above zero lights at least one cell.
+export const textBar = (percent: number | null) => {
+  if (percent === null) return `${'⬛'.repeat(CELLS)} --`
   const pct = Math.min(100, Math.max(0, Math.round(percent)))
-  const filled = Math.round((pct * 6) / 100)
-  return `${'█'.repeat(filled)}${'░'.repeat(6 - filled)} ${pct}%`
+  const filled = Math.ceil((pct * CELLS) / 100)
+  return `${levelCell(pct).repeat(filled)}${'⬛'.repeat(CELLS - filled)} ${pct}%`
 }
 
-// The bar's cells with the percentage centred in them, cut where the fill ends.
-export const barCells = (percent: number | null, width: number) => {
-  const pct = percent === null ? null : Math.min(100, Math.max(0, Math.round(percent)))
-  const label = pct === null ? '--' : `${pct}%`
-  const left = Math.floor((width - label.length) / 2)
-  const cells = ' '.repeat(left) + label + ' '.repeat(width - left - label.length)
-  const filled = pct === null ? 0 : Math.round((pct * width) / 100)
-  return { pct, filled: cells.slice(0, filled), empty: cells.slice(filled) }
-}
-
-// Plain-text copy for surfaces that draw the status line but not the band.
 export const statusText = (u: Usage, nowMs: number) => {
   const part = (label: string, m: Meter | null) => {
     const reset = countdown(m?.resetsAt, nowMs)
@@ -62,70 +50,26 @@ export const statusText = (u: Usage, nowMs: number) => {
   return [part('5h', u.fiveHour), part('7d', u.sevenDay), `ctx ${textBar(u.context)}`].join('  │  ')
 }
 
+let latest: Usage | null = null
+
+async function show($: EngineInterface) {
+  if (latest) $.ui.status(statusText(latest, await $.clock.now()))
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const result = await next(e)
     const { rateLimits, context } = await $.session.usage()
-    const first = toUsage(rateLimits, context)
-    await update($, usage, () => first)
-    $.ui.status(statusText(first, await $.clock.now()))
-    const tick = async () => {
-      const t = await $.clock.now()
-      await update($, now, () => t)
-    }
-    await tick()
-    $.clock.every(60_000, tick)
+    latest = toUsage(rateLimits, context)
+    await show($)
+    // Redraw every minute so the reset countdowns stay current between turns.
+    $.clock.every(60_000, () => show($))
     return result
   })
 
   on('session.measure', async ($, e, next) => {
-    const latest = toUsage(e.rateLimits, e.context)
-    await update($, usage, () => latest)
-    $.ui.status(statusText(latest, await $.clock.now()))
+    latest = toUsage(e.rateLimits, e.context)
+    await show($)
     return next(e)
-  })
-
-  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    const current = await read($, usage)
-    if (e.props.hasSurvey || current === null) return next(e)
-
-    const nowMs = (await read($, now)) || (await $.clock.now())
-    const { Box, Text } = $.ui.resolve(e)
-    const width = e.props.bodyColumns < 110 ? 12 : 20
-
-    const meter = (label: string, percent: number | null, resetsAt?: string) => {
-      const { pct, filled, empty } = barCells(percent, width)
-      const reset = countdown(resetsAt, nowMs)
-      return (
-        <Box flexDirection="row" key={label}>
-          <Text bold>{label} </Text>
-          <Text>
-            <Text bold color="inverseText" backgroundColor={pct === null ? 'subtle' : levelColor(pct)}>
-              {filled}
-            </Text>
-            <Text bold color="text" backgroundColor="subtle">
-              {empty}
-            </Text>
-          </Text>
-          {reset ? <Text dimColor> ↻ {reset}</Text> : null}
-        </Box>
-      )
-    }
-
-    const sep = (key: string) => (
-      <Text color="subtle" key={key}>
-        {'  │  '}
-      </Text>
-    )
-
-    return (
-      <Box flexDirection="row">
-        {meter('5h', current.fiveHour?.percent ?? null, current.fiveHour?.resetsAt)}
-        {sep('s1')}
-        {meter('7d', current.sevenDay?.percent ?? null, current.sevenDay?.resetsAt)}
-        {sep('s2')}
-        {meter('ctx', current.context)}
-      </Box>
-    )
   })
 }
