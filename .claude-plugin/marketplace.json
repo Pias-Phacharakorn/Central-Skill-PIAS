@@ -10,16 +10,6 @@
       "description": "General engineering workflow skills: planning, grilling, specs, TDD, code review, debugging"
     },
     {
-      "name": "bim-dev",
-      "source": "./plugins/bim-dev",
-      "description": "ThatOpen / BIM web component skills"
-    },
-    {
-      "name": "app-dev",
-      "source": "./plugins/app-dev",
-      "description": "Firebase, Genkit, React Router and Xcode app development skills"
-    },
-    {
       "name": "usage-bar",
       "source": "./plugins/usage-bar",
       "description": "Mod: status line with green / yellow / red 5h / 7d plan-limit bars, context fill and reset countdowns"
