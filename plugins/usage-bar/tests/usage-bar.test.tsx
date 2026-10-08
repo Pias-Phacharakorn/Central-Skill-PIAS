@@ -29,15 +29,8 @@ test('bar splits into filled and empty cells', async () => {
   expect(barParts(null)).toEqual({ pct: null, filled: '', empty: '░░░░░░' })
 })
 
-test('the hint line shows coloured meters and no status line', async ($, on) => {
-  mock.clock(on)
-  const statuses: (string | undefined)[] = []
-  on('ui.status', (_$, e) => {
-    statuses.push(e.text)
-    return { value: undefined }
-  })
-  on('session.measure', (_$, e) => ({ changed: e.changed }))
-  await $.session.measure({
+const measure = async ($: Parameters<Parameters<typeof test>[1]>[0]) =>
+  $.session.measure({
     context: { window: 1_000_000, tokens: 80_000, percent: 8 },
     rateLimits: [
       { kind: 'five_hour', percentUsed: 42.4, resetsAt: '2099-01-01T00:00:00Z' },
@@ -45,14 +38,41 @@ test('the hint line shows coloured meters and no status line', async ($, on) => 
     ],
     changed: ['context', 'rateLimits'],
   })
+
+const expectMeters = async (ui: { find: (q: { type: 'Text'; text: RegExp }) => Promise<unknown> }) => {
+  expect(await ui.find({ type: 'Text', text: /42%/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /91%/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /8%/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /↻/ })).toBeDefined()
+}
+
+test('terminal: meters on the hint line, no status line', async ($, on) => {
+  mock.clock(on)
+  const statuses: (string | undefined)[] = []
+  on('ui.status', (_$, e) => {
+    statuses.push(e.text)
+    return { value: undefined }
+  })
+  on('session.measure', (_$, e) => ({ changed: e.changed }))
+  await measure($)
   expect(statuses).toEqual([])
-  for (const surface of ['terminal', 'desktop'] as const) {
-    const ui = await $.ui.mount({ ...HINT, surface })
-    expect(await ui.find({ type: 'Text', text: /42%/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /91%/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /8%/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /shortcuts/ })).toBeDefined()
-    expect(await ui.find({ type: 'Text', text: /↻/ })).toBeDefined()
-    await ui.unmount()
-  }
+  const ui = await $.ui.mount({ ...HINT, surface: 'terminal' })
+  await expectMeters(ui)
+  expect(await ui.find({ type: 'Text', text: /shortcuts/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('desktop: meters in the footer mode labels', async ($, on) => {
+  mock.clock(on)
+  on('session.measure', (_$, e) => ({ changed: e.changed }))
+  await measure($)
+  const ui = await $.ui.mount({
+    plugin: 'usage-bar',
+    component: 'SessionMode',
+    surface: 'desktop',
+    props: { modes: ['focus'] },
+  })
+  await expectMeters(ui)
+  expect(await ui.find({ type: 'Text', text: /focus/ })).toBeDefined()
+  await ui.unmount()
 })
