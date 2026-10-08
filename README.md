@@ -18,7 +18,6 @@ Add to each project's `.claude/settings.json` and commit:
   },
   "enabledPlugins": {
     "pias-workflow@pias-skills": true,
-    "bim-dev@pias-skills": true,
     "usage-bar@pias-skills": true
   }
 }
@@ -41,8 +40,6 @@ Pick the target agent(s) when prompted. For cloud agents, put this command in th
 | Plugin | Contents |
 |---|---|
 | `pias-workflow` | ask-matt, caveman, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-me, grill-with-docs, grilling, handoff, implement, improve-codebase-architecture, plan-visualizer, prototype, research, resolving-merge-conflicts, sentry-sdk-skill-creator, setup-matt-pocock-skills, tdd, teach, to-questionnaire, to-spec, to-tickets, triage, wait-what, wayfinder, wizard, writing-for-agents |
-| `bim-dev` | thatopen-bim-component, thatopen-items-finder, thatopen-ui-section-grids |
-| `app-dev` | developing-genkit-*, firebase-*, react-router-framework-mode, xcode-project-setup |
 | `usage-bar` | Mod (function hooks): status line under the prompt with green / yellow / red 5h / 7d plan-limit bars, context fill and reset countdowns |
 
 Project-specific skills (e.g. `build-addin`, `learnopen-*`) stay in their own project.

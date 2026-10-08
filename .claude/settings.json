@@ -9,7 +9,6 @@
   },
   "enabledPlugins": {
     "pias-workflow@pias-skills": true,
-    "bim-dev@pias-skills": true,
     "usage-bar@pias-skills": true
   }
 }
