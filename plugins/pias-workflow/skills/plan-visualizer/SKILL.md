@@ -37,7 +37,6 @@ Reply in chat with **only**: the file path, one sentence restating the Goal, and
 to open it in Markdown preview (`Ctrl+Shift+V`) and say approve or request changes.
 Do not paste plan content into chat.
 
-- Approved → proceed to `caveman-code`
 - Changes requested → edit `plan-visualizer.md` in place, repeat the same short reply
 - Question asked → answer it, do not start coding
 - **Never write code before explicit approval.**
