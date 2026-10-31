@@ -44,6 +44,28 @@ Central-Skill-PIAS/
 | `pias-workflow` | ask-matt, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-me, grill-with-docs, grilling, handoff, implement, implement-spec, improve-codebase-architecture, pr, prototype, research, resolving-merge-conflicts, retro, sentry-sdk-skill-creator, setup-matt-pocock-skills, tdd, teach, to-questionnaire, to-spec, to-tickets, triage, wait-what, wayfinder, wizard, writing-for-agents |
 | `usage-bar` | Mod (function hooks): prompt footer (desktop) or hint line (terminal) with coloured (green / yellow / red) 5h / 7d plan-limit bars, context fill and reset countdowns |
 
+## Active PIAS repos
+
+The projects in active use. Any task that spans "every repo", such as rolling out a skill change
+or running `/setup-matt-pocock-skills` everywhere, covers this list and nothing else.
+
+| Repo | What it is |
+|---|---|
+| `Central-Skill-PIAS` | This repo: the shared skills marketplace |
+| `PIAS_PowerBI-MCP` | Power BI reports (`.pbip`) edited through `powerbi-modeling-mcp` |
+| `BIMBOY-Platform` | BIMBOY web BIM platform (React, ThatOpen, Supabase) |
+| `BIM-BOY` | BIMBOY marketing and learning site (Next.js, static) |
+| `PIAS-RevitAddInC` | BatchRunner, the Revit 2026 add-in (C#) |
+| `PIAS-NavisAddIns` | Navisworks Manage 2026 ribbon add-in (C#) |
+| `PIAS-Dynamo` | Dynamo graphs and Python scripts for Revit 2026 workflows |
+| `PIAS_Blender-MCP` | Blender projects driven through `mcp-for-blender` |
+| `LearnRevitAPI` | pyRevit extension (`PIAS_pyrevit.tab`) |
+| `04-AI-OPS` | Secretary vault: knowledge base, and the agent that delegates across the other projects |
+
+Every other repo on the account is inactive. Leave it alone unless it is named explicitly.
+`batchrunner-releases` is the one to keep in mind: BatchRunner's update check reads
+`latest.json` from it.
+
 ## Using the skills
 
 ### Claude Code (local + cloud)
