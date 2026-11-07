@@ -43,6 +43,30 @@ Central-Skill-PIAS/
 |---|---|
 | `pias-workflow` | ask-matt, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-me, grill-with-docs, grilling, handoff, implement, implement-spec, improve-codebase-architecture, pr, prototype, research, resolving-merge-conflicts, retro, sentry-sdk-skill-creator, setup-matt-pocock-skills, tdd, teach, to-questionnaire, to-spec, to-tickets, triage, wait-what, wayfinder, wizard, writing-for-agents |
 | `usage-bar` | Mod (function hooks): prompt footer (desktop) or hint line (terminal) with coloured (green / yellow / red) 5h / 7d plan-limit bars, context fill and reset countdowns |
+| `antigravity` | **Third-party**, not PIAS code: [yuting0624/antigravity-for-claude-code](https://github.com/yuting0624/antigravity-for-claude-code) (MIT), pinned to commit `7e9c5fe`. Hands bulk work to the Antigravity CLI (`agy`, Gemini). See [Third-party plugins](#third-party-plugins) |
+
+### Third-party plugins
+
+#### `antigravity`
+
+Listed here by reference, not copied: `marketplace.json` points at the upstream repo at a fixed
+`sha`, so connected repos only get code that was reviewed. To take a newer upstream version,
+review the diff from `7e9c5fe` first, then bump the `sha`.
+
+- **Opt in per repo only.** Add `"antigravity@pias-skills": true` to that repo's
+  `.claude/settings.json`. Never enable it in `~/.claude/settings.json` or in a repo with client
+  or NDA material: every prompt and file it delegates is sent to Google (Gemini).
+- **Needs `agy` wherever it runs.** Install the Antigravity CLI and log in to Google on the
+  machine. Cloud sessions don't have it, so delegation fails there unless the environment's
+  setup script installs and authenticates it. Native Windows can hang; use WSL, macOS or Linux.
+- **Hooks run in every session where it's on:** a routing policy at session start and a
+  "consider delegating" nudge on bulk-looking prompts. Turn them off with the plugin options
+  `coding_policy` and `delegation_nudge` set to `off`.
+- **Avoid:** `/media`, which always runs `agy` with `--yolo` (every tool, whole machine,
+  over the media file's whole folder); and `agy-migrate --apply` when an MCP server keeps tokens
+  in `env`, because it copies that `env` into the Antigravity config. Don't pass `--yolo` to
+  `agy-delegate` outside a throwaway branch; upstream's own README says `--sandbox` does not
+  contain it.
 
 ## Active PIAS repos
 
