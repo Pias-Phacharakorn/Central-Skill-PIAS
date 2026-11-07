@@ -86,6 +86,7 @@ or running `/setup-matt-pocock-skills` everywhere, covers this list and nothing 
 | `PIAS_Blender-MCP` | Blender projects driven through `mcp-for-blender` |
 | `LearnRevitAPI` | pyRevit extension (`PIAS_pyrevit.tab`) |
 | `04-AI-OPS` | Secretary vault: knowledge base, and the agent that delegates across the other projects |
+| `PIAS_VedioMaker` | Pixel-art / doodle explainer videos made with HyperFrames (HTML → MP4); art drawn in code, music and SFX synthesized in Python |
 
 Every other repo on the account is inactive. Leave it alone unless it is named explicitly.
 `batchrunner-releases` is the one to keep in mind: BatchRunner's update check reads
