@@ -23,7 +23,7 @@ Central-Skill-PIAS/
 ├── .claude-plugin/
 │   └── marketplace.json             # Marketplace manifest (pias-skills)
 ├── .claude/
-│   └── settings.json                # Enables both plugins in this repo
+│   └── settings.json                # Enables the plugins in this repo
 ├── plugins/
 │   ├── pias-workflow/               # Engineering workflow skills
 │   │   ├── .claude-plugin/plugin.json
@@ -53,9 +53,10 @@ Listed here by reference, not copied: `marketplace.json` points at the upstream 
 `sha`, so connected repos only get code that was reviewed. To take a newer upstream version,
 review the diff from `7e9c5fe` first, then bump the `sha`.
 
-- **Opt in per repo only.** Add `"antigravity@pias-skills": true` to that repo's
-  `.claude/settings.json`. Never enable it in `~/.claude/settings.json` or in a repo with client
-  or NDA material: every prompt and file it delegates is sent to Google (Gemini).
+- **Enabled in every active PIAS repo** through `"antigravity@pias-skills": true` in each
+  repo's `.claude/settings.json`. Don't put it in `~/.claude/settings.json`, and leave it out of
+  any repo with client or NDA material: every prompt and file it delegates is sent to Google
+  (Gemini).
 - **Needs `agy` wherever it runs.** Install the Antigravity CLI and log in to Google on the
   machine. Cloud sessions don't have it, so delegation fails there unless the environment's
   setup script installs and authenticates it. Native Windows can hang; use WSL, macOS or Linux.
@@ -103,6 +104,7 @@ Add to each project's `.claude/settings.json` and commit:
   },
   "enabledPlugins": {
     "pias-workflow@pias-skills": true,
+    "antigravity@pias-skills": true,
     "usage-bar@pias-skills": true
   }
 }

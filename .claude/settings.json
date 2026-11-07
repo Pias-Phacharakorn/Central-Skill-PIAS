@@ -9,6 +9,7 @@
   },
   "enabledPlugins": {
     "pias-workflow@pias-skills": true,
+    "antigravity@pias-skills": true,
     "usage-bar@pias-skills": true
   }
 }
