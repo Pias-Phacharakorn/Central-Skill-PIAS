@@ -19,9 +19,9 @@
       "source": {
         "source": "github",
         "repo": "yuting0624/antigravity-for-claude-code",
-        "sha": "7e9c5fe0288d984202daddb6f19e9c3cfb878b68"
+        "sha": "5f9e5a06ad1be0440ab5eeeee560fb3e49b43a54"
       },
-      "description": "Third-party (yuting0624, MIT): delegate bulk work to the Antigravity CLI (agy / Gemini). Pinned to the reviewed commit 7e9c5fe. Opt in per repo; never for client / NDA code."
+      "description": "Third-party (yuting0624, MIT): delegate bulk work to the Antigravity CLI (agy / Gemini). Pinned to the reviewed commit 5f9e5a0 (v0.31.3). Opt in per repo; never for client / NDA code."
     }
   ]
 }
