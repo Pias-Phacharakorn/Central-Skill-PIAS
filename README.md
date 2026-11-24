@@ -43,7 +43,7 @@ Central-Skill-PIAS/
 |---|---|
 | `pias-workflow` | ask-matt, code-review, codebase-design, diagnosing-bugs, domain-modeling, grill-me, grill-with-docs, grilling, handoff, implement, implement-spec, improve-codebase-architecture, pr, prototype, research, resolving-merge-conflicts, retro, sentry-sdk-skill-creator, setup-matt-pocock-skills, tdd, teach, to-questionnaire, to-spec, to-tickets, triage, wait-what, wayfinder, wizard, writing-for-agents |
 | `usage-bar` | Mod (function hooks): prompt footer (desktop) or hint line (terminal) with coloured (green / yellow / red) 5h / 7d plan-limit bars, context fill and reset countdowns |
-| `antigravity` | **Third-party**, not PIAS code: [yuting0624/antigravity-for-claude-code](https://github.com/yuting0624/antigravity-for-claude-code) (MIT), pinned to commit `7e9c5fe`. Hands bulk work to the Antigravity CLI (`agy`, Gemini). See [Third-party plugins](#third-party-plugins) |
+| `antigravity` | **Third-party**, not PIAS code: [yuting0624/antigravity-for-claude-code](https://github.com/yuting0624/antigravity-for-claude-code) (MIT), pinned to commit `5f9e5a0` (v0.31.3). Hands bulk work to the Antigravity CLI (`agy`, Gemini). See [Third-party plugins](#third-party-plugins) |
 
 ### Third-party plugins
 
@@ -51,7 +51,7 @@ Central-Skill-PIAS/
 
 Listed here by reference, not copied: `marketplace.json` points at the upstream repo at a fixed
 `sha`, so connected repos only get code that was reviewed. To take a newer upstream version,
-review the diff from `7e9c5fe` first, then bump the `sha`.
+review the diff from `5f9e5a0` first, then bump the `sha`.
 
 - **Enabled in every active PIAS repo** through `"antigravity@pias-skills": true` in each
   repo's `.claude/settings.json`. Don't put it in `~/.claude/settings.json`, and leave it out of
@@ -63,11 +63,16 @@ review the diff from `7e9c5fe` first, then bump the `sha`.
 - **Hooks run in every session where it's on:** a routing policy at session start and a
   "consider delegating" nudge on bulk-looking prompts. Turn them off with the plugin options
   `coding_policy` and `delegation_nudge` set to `off`.
-- **Avoid:** `/media`, which always runs `agy` with `--yolo` (every tool, whole machine,
-  over the media file's whole folder); and `agy-migrate --apply` when an MCP server keeps tokens
-  in `env`, because it copies that `env` into the Antigravity config. Don't pass `--yolo` to
-  `agy-delegate` outside a throwaway branch; upstream's own README says `--sandbox` does not
-  contain it.
+- **Prefer `--read-only` or `--mode accept-edits`.** On `agy` 1.5.7+ an unflagged run uses
+  `Auto` mode, which edits workspace files on its own (and on 1.5.16+ some writes outside the
+  workspace). Pass `--read-only` for reads and reviews, `--mode accept-edits` for file edits
+  with no shell.
+- **`/media` needs `agy` 1.4.10+.** There it runs with scoped permissions: one output file,
+  no shell. On older `agy` it falls back to `--yolo` (every tool, whole machine), so don't use
+  it there.
+- **Avoid:** `agy-migrate --apply` when an MCP server keeps tokens in `env`, because it copies
+  that `env` into the Antigravity config. Don't pass `--yolo` to `agy-delegate` outside a
+  throwaway branch; upstream's own README says `--sandbox` does not contain it.
 
 ## Active PIAS repos
 
